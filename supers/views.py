@@ -15,9 +15,10 @@ def supers_list(request):
         super_types = SuperType.objects.all()
         custom_response_dict = {}
 
-        super_type_param = request.query_params.get('type').capitalize()
+        super_type_param = request.query_params.get('type')
 
         if super_type_param:
+            super_type_param = super_type_param.capitalize()
             queryset = queryset.filter(super_type__type=super_type_param)
             serializer_queryset = SuperSerializer(
                 queryset, many=True)
@@ -31,16 +32,25 @@ def supers_list(request):
 
             return Response(custom_response_dict, status=status.HTTP_200_OK)
 
-    # elif request.method == 'POST':
-    #     serializer_super = SuperSerializer(data=request.data)
-    #     serializer_super.is_valid(raise_exception=True)
-    #     serializer_super.save()
-    #     return Response(serializer_super.data, status=status.HTTP_201_CREATED)
+    elif request.method == 'POST':
+        serializer_super = SuperSerializer(data=request.data)
+        serializer_super.is_valid(raise_exception=True)
+        serializer_super.save()
+        return Response(serializer_super.data, status=status.HTTP_201_CREATED)
 
 
-@api_view(['GET'])
-def super_details(requst, pk):
+@api_view(['GET', 'PUT', 'DELETE'])
+def super_details(request, pk):
+
     requested_super = get_object_or_404(Super, pk=pk)
-    if requst.method == 'GET':
+    if request.method == 'GET':
         serializer_super = SuperSerializer(requested_super)
         return Response(serializer_super.data, status=status.HTTP_200_OK)
+    elif request.method == 'PUT':
+        serializer_super = SuperSerializer(requested_super, data=request.data)
+        serializer_super.is_valid(raise_exception=True)
+        serializer_super.save()
+        return Response(serializer_super.data, status=status.HTTP_200_OK)
+    elif request.method == 'DELETE':
+        requested_super.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
